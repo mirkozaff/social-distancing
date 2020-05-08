@@ -9,30 +9,27 @@ def order_points(pts):
 	# bottom-right, and the fourth is the bottom-left
 	rect = np.zeros((4, 2), dtype = "float32")
 
-	# the top-left point will have the smallest sum, whereas
-	# the bottom-right point will have the largest sum
-	s = pts.sum(axis = 1)
-	rect[0] = pts[np.argmin(s)]
-	rect[2] = pts[np.argmax(s)]
+	# order the point based on their y-value so that the first two element 
+	# will be the top points and the last two the bottom points
+	top_pts = pts[pts[:,1].argsort()][:2]
+	bottom_pts = pts[pts[:,1].argsort()][2:]
 
-	# now, compute the difference between the points, the
-	# top-right point will have the smallest difference,
-	# whereas the bottom-left will have the largest difference
-	diff = np.diff(pts, axis = 1)
-	rect[1] = pts[np.argmin(diff)]
-	rect[3] = pts[np.argmax(diff)]
+	# order the top points based on the x-value to obtain
+	# top-left in the first entry and top right in the second one
+	rect[0], rect[1] = top_pts[top_pts[:,0].argsort()][:2]
 
-	print(rect)
-	pts = pts.astype('float32')
+	# order the bottom points based on the x-value to obtain
+	# bottom-left in the first entry and bottom-right in the second one
+	rect[3], rect[2] = bottom_pts[bottom_pts[:,0].argsort()][:2]
 
 	# return the ordered coordinates
-	return pts
+	return rect
 
 def four_point_transform(image, pts):
 	# obtain a consistent order of the points and unpack them
 	# individually
-	#rect = order_points(pts)
-	rect = np.array(pts, dtype = "float32")
+	rect = order_points(pts)
+	#rect = np.array(pts, dtype = "float32")
 	(tl, tr, br, bl) = rect
 	
 	# compute the width of the new image, which will be the
@@ -63,45 +60,7 @@ def four_point_transform(image, pts):
 	# compute the perspective transform matrix and then apply it
 	M = cv2.getPerspectiveTransform(rect, dst)
 
-	'''
-	a = np.dot(M, (1700, 212, 1))
-	b = np.dot(M, (1637, 212, 1))
-	dist = np.sqrt(((a[0]/a[2] - b[0]/b[2]) ** 2) + ((a[1]/a[2] - b[1]/b[2]) ** 2))
-	print(dist)
-
-	a = np.dot(M, (1486, 868, 1))
-	b = np.dot(M, (1651, 518, 1))
-	dist = np.sqrt(((a[0]/a[2] - b[0]/b[2]) ** 2) + ((a[1]/a[2] - b[1]/b[2]) ** 2))
-	print(dist)
-
-	a = np.dot(M, (1052, 294, 1))
-	b = np.dot(M, (1115, 302, 1))
-	dist = np.sqrt(((a[0]/a[2] - b[0]/b[2]) ** 2) + ((a[1]/a[2] - b[1]/b[2]) ** 2))
-	print(dist)
-
-	
-
-	a = np.dot(M, (368, 590, 1))
-	b = np.dot(M, (546, 465, 1))
-	dist = np.sqrt(((a[0]/a[2] - b[0]/b[2]) ** 2) + ((a[1]/a[2] - b[1]/b[2]) ** 2))
-	print(dist)
-
-	a = np.dot(M, (1486, 868, 1))
-	b = np.dot(M, (1971, 516, 1))
-	dist = np.sqrt(((a[0]/a[2] - b[0]/b[2]) ** 2) + ((a[1]/a[2] - b[1]/b[2]) ** 2))
-	print(dist)
-
-	point_transformed = cv2.perspectiveTransform(np.array([1491, 581, 1], dtype='float32'), M)
-
-	a = np.dot(M, (1491, 581, 1))
-
-	#c = np.zeros((1, 2), dtype = "float32")
-	#a = np.array([368, 590, 1], dtype = "float32")
-	#pointsOut = cv2.perspectiveTransform( a,  c, M)
-	#print(pointsOut)
-	'''
 	warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
-	#warped = cv2.circle(warped, (int(a[0]/a[2]), int(a[1]/a[2])), radius=20, color=(0, 0, 255), thickness=-1)
 
 	# return the warped image
 	return warped, M

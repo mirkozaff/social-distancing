@@ -57,15 +57,13 @@ if __name__ == '__main__':
 
         # Four perspective points in the following order: top-left, top-right, bottom-right, bottom-left
         pts = np.array([(353, 0), (913, 0), (1261, 656), (15, 668)])
-        #pts = np.array([(1400, 0), (2269, 0), (2005, 1285), (0, 635)])
-        #im = cv2.resize(im, (2304, 1296))
+
         # Obtaining warped image and transformation matrix
         warped, M = four_point_transform(im, pts)
         cv2.imwrite('warped.png', warped)
 
         # Get all bounding box on cpu
         bboxes = outputs["instances"].pred_boxes.to("cpu")
-        temp = []
 
         for instance in bboxes:
             # Get the bottom-left and bottom-right points of the bounding box in the trasnformed space
@@ -91,7 +89,7 @@ if __name__ == '__main__':
                 dist = np.linalg.norm(a - b)
                 #dist = np.sqrt(((a[0]/a[2] - b[0]/b[2]) ** 2) + ((a[1]/a[2] - b[1]/b[2]) ** 2))
 
-                if (dist < 100) and (dist != 0):
+                if (dist < 90) and (dist != 0):
                     # Get median points in the original space
                     x1 = np.median(np.array([[instance[0], instance[3]], [instance[2], instance[3]]]), axis=0)
                     x2 = np.median(np.array([[instance2[0], instance2[3]], [instance2[2], instance2[3]]]), axis=0)
@@ -101,10 +99,6 @@ if __name__ == '__main__':
                     #x = v.draw_box(instance2, alpha=0.5, edge_color='r', line_style='-')
                     x = v.draw_line([x1[0], x2[0]], [x1[1], x2[1]], color = 'r', linestyle="-", linewidth=None)
 
-                    #temp.append(list(instance))
-                    #temp.append(list(instance2))
-
-            #if instance in temp:
             x = v.draw_box(instance, alpha=0.5, edge_color='g', line_style='-')              
 
         # Write final image
